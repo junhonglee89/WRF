@@ -1030,6 +1030,9 @@ endif
                       grid%mp_restart_state,grid%tbpvs_state,grid%tbpvs0_state,&
                       allowed_to_read, grid%moved, start_of_simulation,               &
                       grid%LAGDAY, &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_Junhong
+                      grid%Hc_jun, &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
                       ids, ide, jds, jde, kds, kde,           &
                       ims, ime, jms, jme, kms, kme,           &
                       grid%i_start(ij), grid%i_end(ij), grid%j_start(ij), grid%j_end(ij), kts, kte, &

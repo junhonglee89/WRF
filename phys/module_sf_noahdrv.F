@@ -44,6 +44,9 @@ CONTAINS
                   ACSNOM,ACSNOW,                                & !O
                   SNOPCX,                                       & !O
                   POTEVP,                                       & !O
+!================wonseok==================================================
+                 fcev, fgev, fctr,                              & !O for LS4P
+!=========================================================================
                   SMCREL,                                       & !O
                   XICE_THRESHOLD,                               &
                   RDLAI2D,USEMONALB,                            &
@@ -338,6 +341,12 @@ CONTAINS
                                                         POTEVP, &
                                                         ALBEDO, &
                                                            ZNT
+!==================wonseok===============================================================   ::   Variable for LS4P
+    REAL,    DIMENSION( ims:ime, jms:jme )                     , &
+             INTENT(INOUT)    ::                           fcev, &
+                                                           fgev, &
+                                                           fctr
+!========================================================================================
    REAL,    DIMENSION( ims:ime, jms:jme )                     , &
             INTENT(OUT)      ::                         NOAHRES
    INTEGER, INTENT(IN)       ::                         OPT_THCND
@@ -1148,7 +1157,13 @@ CONTAINS
           EMISS(I,J) = EMISSI
           EMISS_RURAL(I,J) = EMISSI
 ! Noah: activate time-varying roughness length (V3.3 Feb 2011)
-          ZNT(I,J)=Z0K
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+IF ( XLAND(I,J) .LT. 1.5 .and. (IVGTYP(I,J)>=2 .and. IVGTYP(I,J) <=15)) THEN
+  ZNT(I,J) = ZNT(I,J)
+ELSE
+  ZNT(I,J)=Z0K
+ENDIF
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 !
 ! FASDAS
 !
@@ -1176,6 +1191,11 @@ CONTAINS
         POTEVP(I,J)=POTEVP(I,J)+ETP*FDTW
           QFX(I,J)=ETA_KINEMATIC
           QFX_RURAL(I,J)=ETA_KINEMATIC
+!===========wonseok===============================================================    ::   get the value from SFLX Subroutine
+          fcev(I,J)=EC
+          fgev(I,J)=EDIR
+          fctr(I,J)=ETT
+!=================================================================================
 
 #ifdef WRF_HYDRO
 !added by Wei Yu

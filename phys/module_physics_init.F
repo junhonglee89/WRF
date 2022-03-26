@@ -81,6 +81,9 @@ CONTAINS
                          mp_restart_state,tbpvs_state,tbpvs0_state,&
                          allowed_to_read, moved, start_of_simulation,&
                          LAGDAY,                                 &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+                         Hc_jun, &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
                          ids, ide, jds, jde, kds, kde,           &
                          ims, ime, jms, jme, kms, kme,           &
                          its, ite, jts, jte, kts, kte,           &
@@ -459,6 +462,9 @@ CONTAINS
    REAL,     DIMENSION( ims:ime , jms:jme ) , INTENT(INOUT) ::         &
              XLAND,ZNT,Z0,UST,MOL,LU_INDEX,                         &
              PBLH,THC,MAVAIL,HFX,QFX,RAINBL
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+   REAL,     DIMENSION( ims:ime , jms:jme ) , INTENT(INOUT) ::  Hc_jun
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    INTEGER , INTENT(INOUT)  :: landuse_ISICE, landuse_LUCATS
    INTEGER , INTENT(INOUT)  :: landuse_LUSEAS, landuse_ISN
    REAL    , INTENT(INOUT)  , DIMENSION( : ) :: lu_state
@@ -827,12 +833,42 @@ CONTAINS
    REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_soil_layers*mosaic_cat, jms:jme ), INTENT(INOUT) :: TBL_URB3D_mosaic
    REAL, OPTIONAL, DIMENSION( ims:ime, 1:num_soil_layers*mosaic_cat, jms:jme ), INTENT(INOUT) :: TGL_URB3D_mosaic  
    LOGICAL :: IPRINT
+
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+real, dimension(1:50  ) ::  SNUPTBL, RSTBL, RGLTBL, HSTBL,                &
+                            SHDTBL, MAXALB,                               &
+                            EMISSMINTBL, EMISSMAXTBL,                     &
+                            LAIMINTBL, LAIMAXTBL,                         &
+                            Z0MINTBL, Z0MAXTBL,                           &
+                            ALBEDOMINTBL, ALBEDOMAXTBL,                   &
+                            ZTOPVTBL,ZBOTVTBL
+INTEGER, dimension(1:50):: NROTBL
+INTEGER :: LUMATCH, IINDEX, LUCATS1, LCC
+CHARACTER(LEN=256) :: LUTYPE1
+
+INTEGER :: i_jun, j_jun
+INTEGER,PARAMETER :: xts=20000, xte=43200, yts=9600, yte=21600
+REAL,allocatable,dimension(:,:) :: jun_hc
+CHARACTER*100 :: jun_dum
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  
 !-------------------------------------------------
 ! End of Noah-mosaic 
 !-------------------------------------------------  
    
 !-----------------------------------------------------------------
+
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+!allocate ( jun_hc(xte-xts+1,yte-yts+1) )
+!
+! OPEN (unit=887,file='/data1/junhong/LS4P/lidar.bin',access='direct',recl=4*(xte-xts+1),status='old')
+!
+! DO j_jun = 1, (yte-yts+1)
+!   read(887,rec=j_jun) jun_hc(:,j_jun)
+! ENDDO
+!
+! close (887)
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
    aercu_opt=config_flags%aercu_opt !PSH/TWG 06/10/16
    aercu_fct=config_flags%aercu_fct !PSH/TWG 06/10/16
@@ -1062,7 +1098,50 @@ CONTAINS
    endif
    ENDIF
 !
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+  OPEN(19, FILE='VEGPARM.TBL',FORM='FORMATTED',STATUS='OLD')
 
+  LUMATCH=0
+
+  FIND_LUTYPE1 : DO WHILE (LUMATCH == 0)
+     READ (19,*,END=993)
+     READ (19,*,END=993)LUTYPE1
+     READ (19,*)LUCATS1,IINDEX
+!     print*, MMINLU_loc, LUTYPE1, LUCATS1,IINDEX
+
+     IF(LUTYPE1.EQ.MMINLU_loc)THEN
+!       print*, 'LANDUSE TYPE = ' // TRIM ( LUTYPE1 ) // ' FOUND', LUCATS1,' CATEGORIES'
+       LUMATCH=1
+     ELSE
+       DO LCC = 1, LUCATS1+14
+          read(19,*)
+       ENDDO
+     ENDIF
+  ENDDO FIND_LUTYPE1
+
+  IF(LUTYPE1.EQ.MMINLU_loc)THEN
+    DO LCC=1,LUCATS1
+      READ (19,*)IINDEX,SHDTBL(LCC),                        &
+                NROTBL(LCC),RSTBL(LCC),RGLTBL(LCC),HSTBL(LCC), &
+                SNUPTBL(LCC),MAXALB(LCC), LAIMINTBL(LCC),     &
+                LAIMAXTBL(LCC),EMISSMINTBL(LCC),             &
+                EMISSMAXTBL(LCC), ALBEDOMINTBL(LCC),         &
+                ALBEDOMAXTBL(LCC), Z0MINTBL(LCC), Z0MAXTBL(LCC),&
+                ZTOPVTBL(LCC), ZBOTVTBL(LCC)
+    ENDDO
+  ENDIF
+  CLOSE(19)
+!
+ 993   CONTINUE
+
+DO j = jts, jtf
+DO i = its, itf
+  HC_jun(i,j) = ZTOPVTBL( IVGTYP(i,j) )
+  IF ( XLAND(i,j) .GT. 1.5 ) HC_jun(i,j) = 0
+ENDDO
+ENDDO
+
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 !
    DO j=jts,jtf
    DO i=its,itf
@@ -1186,6 +1265,46 @@ CONTAINS
    ENDIF
 
   ENDIF !}
+
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+!  DO j=jts,jtf
+!  DO i=its,itf
+!    DO j_jun=1,(yte-yts+1)
+!      IF (xlat(i,j) .lt. -89.99853911+0.00833333*(9600+j_jun-1)) then
+!        DO i_jun=1,(xte-xts+1)
+!          IF (xlong(i,j) .lt. -180.00138889+0.00833333*(20000+i_jun-1)) then
+!            IF (xland(i,j) .gt. 1.5 ) then
+!!              ZNT(i,j)=0.0001
+!!              Z0 (i,j)=0.0001
+!              HC_jun (i,j)=0
+!              go to 888
+!            ENDIF
+!            IF ( jun_hc(i_jun,j_jun) > 0 ) then
+!              HC_jun(i,j)=jun_hc(i_jun,j_jun)
+!              ZNT(i,j)= Hc_jun(i,j) * 0.15
+!              Z0 (i,j)= Hc_jun(i,j) * 0.15
+!            ENDIF
+!            go to 888
+!          ENDIF
+!        ENDDO
+!      ENDIF
+!    ENDDO
+!888 continue
+!  ENDDO
+!  ENDDO
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong2022
+  DO j=jts,jtf
+  DO i=its,itf
+    IF (xland(i,j) .gt. 1.5 ) then
+      HC_jun(i,j) = 0
+    ELSE
+      HC_jun(i,j) = 10
+      ZNT(i,j) = HC_jun(i,j)*0.15
+      Z0 (i,j) = HC_jun(i,j)*0.15
+    ENDIF
+  ENDDO
+  ENDDO
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 !-- convert zfull and zhalf to sigma values for ra_init (Eta CO2 needs these)
 !-- zfull/zhalf may be either zeta or eta
@@ -2402,6 +2521,9 @@ CONTAINS
 !--------------------------------------------------------------------
    USE module_sf_sfclay
    USE module_sf_sfclayrev
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+   USE module_sf_sfclayrev_rsl
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    USE module_sf_slab
    USE module_sf_pxsfclay
    USE module_bl_ysu
@@ -2859,6 +2981,9 @@ CONTAINS
            isfc = 1
       CASE (SFCLAYREVSCHEME)
             CALL sfclayrevinit
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+            CALL sfclayrevinit_rsl
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
            isfc = 1
       CASE (PXSFCSCHEME)
            CALL pxsfclayinit( allowed_to_read )

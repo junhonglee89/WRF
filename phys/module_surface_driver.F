@@ -9,6 +9,20 @@ CONTAINS
      &          ,acsnom,acsnow,snowfallac,akhs,akms,albedo,br,canwat  &
      &          ,chklowq,dt,dx,dz8w,dzs,glw                           &
      &          ,grdflx,gsw,swdown,gz1oz0,hfx,ht,ifsnow,isfflx        &
+!------------------------------------------------------------------- jeongwon
+     &          ,u80,v80,t80,th80,q80                                 &
+     &          ,u100,v100,t100,th100,q100                            &
+!------------------------------------------------------------------- jeongwon
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+     &          ,CHS_jun,zol_jun,br_jun &
+!     &          ,psim_hat_jun, psih_hat_jun &
+!     &          ,psix_jun, psiq_jun
+     &          , wspd_jun, ust_jun &
+     &          ,hc_jun, lai_jun, lc_jun, m10_wind, m2_temp  &
+     &          ,beta_jun, zpd_jun                                    &
+     &          ,chs_ori &
+!     &          ,jpsim1,jpsim2,jpsim3,jpsim4,jpsiq1,jpsiq2,jpsiq3,jpsiq4 &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      &          ,fractional_seaice,seaice_albedo_opt                  &
      &          ,seaice_albedo_default,seaice_thickness_opt,          &
      &          seaice_thickness_default                              &
@@ -45,6 +59,9 @@ CONTAINS
      &          ,xicem,isice,iswater,ct,tke_pbl                       &
 #endif
      &          ,albbck,embck,lh,sh2o,shdmax,shdmin,z0                &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_wonseok
+     &          ,fcev,fgev,fctr                                       &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      &          ,flqc,flhc,psfc,sst,sst_input,sstsk,dtw,sst_update,sst_skin     &
      &          ,scm_force_skintemp,scm_force_flux,t2,emiss           &
      &          ,sf_sfclay_physics,sf_surface_physics,ra_lw_physics   & 
@@ -357,6 +374,9 @@ CONTAINS
    USE module_sf_pxlsm
    USE module_sf_temfsfclay
    USE module_sf_sfclayrev
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+   USE module_sf_sfclayrev_rsl
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    USE module_sf_noah_seaice_drv
 #if ( EM_CORE==1)
    USE module_sf_mynn
@@ -681,6 +701,20 @@ CONTAINS
 
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   GRDFLX
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   HFX
+!------------------------------------------------------------------- jeongwon
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   u80, v80, t80, th80, q80
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   u100, v100, t100, th100, q100
+!------------------------------------------------------------------- jeongwon
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   CHS_Jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   zol_Jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   br_Jun
+!   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   psim_hat_jun, psih_hat_jun
+!   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   psix_jun, psiq_jun, wspd_jun, ust_jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   wspd_jun, ust_jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   hc_jun, lai_jun, lc_jun, m10_wind, m2_temp, beta_jun, zpd_jun, chs_ori
+!   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   jpsim1,jpsim2,jpsim3,jpsim4,jpsiq1,jpsiq2,jpsiq3,jpsiq4
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   RMOL
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   PBLH
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   Q2
@@ -864,6 +898,9 @@ CONTAINS
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(IN )::   SHDMAX
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(IN )::   SHDMIN
    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT )::   Z0
+   REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT )::   fcev ! wonseok
+   REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT )::   fgev ! wonseok
+   REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT )::   fctr ! wonseok
 
 !  NoahMP specific fields
 
@@ -1174,6 +1211,10 @@ CONTAINS
                                                              CQS, &
                                                              CPM, &
                                                             CHS2, &
+!------------------------------------------------------------------- jeongwon
+                                                            CHS80, &
+                                                            CHS100, &
+!------------------------------------------------------------------- jeongwon
                                                             CQS2
 
 ! SSIB local variables
@@ -1977,7 +2018,7 @@ CONTAINS
                  ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,                &
                  sf_surface_physics  )
          ELSE
-         CALL SFCLAYREV(u_phytmp,v_phytmp,t_phy,qv_curr,&
+         CALL SFCLAYREV_rsl(u_phytmp,v_phytmp,t_phy,qv_curr,&
                p_phy,dz8w,cp,g,rcp,r_d,xlv,psfc,chs,chs2,cqs2,cpm, &
                znt,ust,pblh,mavail,zol,mol,regime,psim,psih,fm,fhh, &
                xland,hfx,qfx,lh,tsk,flhc,flqc,qgh,qsfc,rmol,       &
@@ -1985,6 +2026,21 @@ CONTAINS
                gz1oz0,wspd,br,isfflx,dx,                           &
                svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,eomeg,stbolt, &
                P1000mb,                                            &
+!------------------------------------------------------------------- jeongwon
+               u80,v80,t80,th80,q80,                                &
+               u100,v100,t100,th100,q100,                           &
+!------------------------------------------------------------------- jeongwon
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+               itimestep, &
+               LAI, IVGTYP, MMINLU,                                &
+!               psim_hat_jun, psih_hat_jun,                         &
+!               psix_jun, psiq_jun, wspd_jun, ust_jun,              &
+               wspd_jun, ust_jun,              &
+               hc_jun, lai_jun, lc_jun, m10_wind, m2_temp,         &
+               beta_jun, zpd_jun,                                  &
+               chs_ori, &
+!               jpsim1,jpsim2,jpsim3,jpsim4,jpsiq1,jpsiq2,jpsiq3,jpsiq4,    &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
                ids,ide, jds,jde, kds,kde,                          &
                ims,ime, jms,jme, kms,kme,                          &
                i_start(ij),i_end(ij), j_start(ij),j_end(ij), kts,kte,    &
@@ -1993,9 +2049,15 @@ CONTAINS
            DO j = j_start(ij),j_end(ij)
            DO i = i_start(ij),i_end(ij)
              ch(i,j) = chs (i,j)
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+             CHS_jun(i,j) = CHS(I,J)
+             zol_jun(i,j) = zol(I,J)
+             br_jun (i,j) = BR (I,J)
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 !!             ch(i,j) = flhc(i,j)/( cpm(i,j)*rho(i,kts,j) )
            end do
            end do
+         CALL wrf_debug( 100, 'end2 SFCLAY' )
 #endif
          ENDIF
        ELSE
@@ -2731,6 +2793,7 @@ CONTAINS
                 acsnom,acsnow,                                  & !o
                 snopcx,                                         & !o
                 potevp,                                         & !o
+                fcev,fgev,fctr,                                 & !wonseok
                 smcrel,                                         & !o
                 xice_threshold,                                 &
                 rdlai2d,usemonalb,                              &

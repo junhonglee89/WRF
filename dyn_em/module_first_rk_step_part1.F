@@ -480,6 +480,20 @@ BENCH_START(surf_driver_tim)
      &        ,FLQC=grid%flqc          ,GLW=grid%glw            ,GRDFLX=grid%grdflx      &
      &        ,GSW=grid%gsw    ,SWDOWN=grid%swdown        ,GZ1OZ0=gz1oz0      ,HFX=grid%hfx              &
      &        ,HT=grid%ht              ,IFSNOW=config_flags%ifsnow      ,ISFFLX=config_flags%isfflx      &
+!--------------------------------------------------------------------------------------------------jeongwon
+     &        ,u80=grid%u80, v80=grid%v80, t80=grid%t80, th80=grid%th80, q80=grid%q80           &
+     &        ,u100=grid%u100, v100=grid%v100, t100=grid%t100, th100=grid%th100, q100=grid%q100           &
+!--------------------------------------------------------------------------------------------------jeongwon
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+     &        ,CHS_jun=grid%CHS_jun,zol_jun=grid%zol_jun,br_jun=grid%br_jun &
+!     &        ,psim_hat_jun=grid%psim_hat_jun, psih_hat_jun=grid%psih_hat_jun &
+!     &        ,psix_jun=grid%psix_jun, psiq_jun=grid%psiq_jun
+     &        , wspd_jun=grid%wspd_jun, ust_jun=grid%ust_jun &
+     &        ,hc_jun=grid%hc_jun, lai_jun=grid%lai_jun, lc_jun=grid%lc_jun, m10_wind=grid%m10_wind, m2_temp=grid%m2_temp &
+     &        ,beta_jun=grid%beta_jun, zpd_jun=grid%zpd_jun                                   &
+     &        ,chs_ori=grid%chs_ori &
+!     &        ,jpsim1=grid%jpsim1,jpsim2=grid%jpsim2,jpsim3=grid%jpsim3,jpsim4=grid%jpsim4,jpsiq1=grid%jpsiq1,jpsiq2=grid%jpsiq2,jpsiq3=grid%jpsiq3,jpsiq4=grid%jpsiq4 &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      &        ,FRACTIONAL_SEAICE=config_flags%fractional_seaice           &
      &        ,SEAICE_ALBEDO_OPT=config_flags%seaice_albedo_opt           &
      &        ,SEAICE_ALBEDO_DEFAULT=config_flags%seaice_albedo_default   &
@@ -509,6 +523,9 @@ BENCH_START(surf_driver_tim)
      &        ,BL_PBL_PHYSICS=config_flags%bl_pbl_physics                              &
      &        ,SF_SURFACE_PHYSICS=config_flags%sf_surface_physics  ,SH2O=grid%sh2o          &
      &        ,SHDMAX=grid%shdmax      ,SHDMIN=grid%shdmin      ,SMOIS=grid%smois        &
+!=====================wonseok================================================================wonseok
+     &        ,FCEV=grid%fcev          ,FGEV=grid%fgev          ,FCTR=grid%fctr          &
+!============================================================================================
      &        ,SMSTAV=grid%smstav      ,SMSTOT=grid%smstot      ,SNOALB=grid%snoalb      &
      &        ,SNOW=grid%snow          ,SNOWC=grid%snowc        ,SNOWH=grid%snowh        &
      &        ,SMCREL=grid%smcrel                                                        &
