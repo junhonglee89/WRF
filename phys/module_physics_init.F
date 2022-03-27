@@ -850,6 +850,7 @@ INTEGER :: i_jun, j_jun
 INTEGER,PARAMETER :: xts=20000, xte=43200, yts=9600, yte=21600
 REAL,allocatable,dimension(:,:) :: jun_hc
 CHARACTER*100 :: jun_dum
+CHARACTER*256 :: message1
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
  
 !-------------------------------------------------
@@ -859,15 +860,15 @@ CHARACTER*100 :: jun_dum
 !-----------------------------------------------------------------
 
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
-!allocate ( jun_hc(xte-xts+1,yte-yts+1) )
-!
-! OPEN (unit=887,file='/data1/junhong/LS4P/lidar.bin',access='direct',recl=4*(xte-xts+1),status='old')
-!
-! DO j_jun = 1, (yte-yts+1)
-!   read(887,rec=j_jun) jun_hc(:,j_jun)
-! ENDDO
-!
-! close (887)
+allocate ( jun_hc(xte-xts+1,yte-yts+1) )
+
+ OPEN (unit=887,file='/data1/junhong/LS4P/lidar.bin',access='direct',recl=1*(xte-xts+1),status='old')
+
+ DO j_jun = 1, (yte-yts+1)
+   read(887,rec=j_jun) jun_hc(:,j_jun)
+ ENDDO
+
+ close (887)
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
    aercu_opt=config_flags%aercu_opt !PSH/TWG 06/10/16
@@ -1267,41 +1268,29 @@ ENDDO
   ENDIF !}
 
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
-!  DO j=jts,jtf
-!  DO i=its,itf
-!    DO j_jun=1,(yte-yts+1)
-!      IF (xlat(i,j) .lt. -89.99853911+0.00833333*(9600+j_jun-1)) then
-!        DO i_jun=1,(xte-xts+1)
-!          IF (xlong(i,j) .lt. -180.00138889+0.00833333*(20000+i_jun-1)) then
-!            IF (xland(i,j) .gt. 1.5 ) then
-!!              ZNT(i,j)=0.0001
-!!              Z0 (i,j)=0.0001
-!              HC_jun (i,j)=0
-!              go to 888
-!            ENDIF
-!            IF ( jun_hc(i_jun,j_jun) > 0 ) then
-!              HC_jun(i,j)=jun_hc(i_jun,j_jun)
-!              ZNT(i,j)= Hc_jun(i,j) * 0.15
-!              Z0 (i,j)= Hc_jun(i,j) * 0.15
-!            ENDIF
-!            go to 888
-!          ENDIF
-!        ENDDO
-!      ENDIF
-!    ENDDO
-!888 continue
-!  ENDDO
-!  ENDDO
-!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong2022
   DO j=jts,jtf
   DO i=its,itf
-    IF (xland(i,j) .gt. 1.5 ) then
-      HC_jun(i,j) = 0
-    ELSE
-      HC_jun(i,j) = 10
-      ZNT(i,j) = HC_jun(i,j)*0.15
-      Z0 (i,j) = HC_jun(i,j)*0.15
-    ENDIF
+    DO j_jun=1,(yte-yts+1)
+      IF (xlat(i,j) .lt. -89.99853911+0.00833333*(9600+j_jun-1)) then
+        DO i_jun=1,(xte-xts+1)
+          IF (xlong(i,j) .lt. -180.00138889+0.00833333*(20000+i_jun-1)) then
+            IF (xland(i,j) .gt. 1.5 ) then
+!              ZNT(i,j)=0.0001
+!              Z0 (i,j)=0.0001
+              HC_jun (i,j)=0
+              go to 888
+            ENDIF
+            IF ( jun_hc(i_jun,j_jun) > 0 ) then
+              HC_jun(i,j)=jun_hc(i_jun,j_jun)
+              ZNT(i,j)= Hc_jun(i,j) * 0.15
+              Z0 (i,j)= Hc_jun(i,j) * 0.15
+            ENDIF
+            go to 888
+          ENDIF
+        ENDDO
+      ENDIF
+    ENDDO
+888 continue
   ENDDO
   ENDDO
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
