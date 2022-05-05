@@ -1,5 +1,28 @@
 !WRF:MODEL_LAYER:PHYSICS
-!------------------------------------------------------------jeongwon
+!
+!  Yonsei University surface layer scheme :
+!  This code is the Yonsei University surface layer (YSL) scheme based on
+!  roughness sublayer theoretical formulation proposed by Harman and Finnigan
+!  (2007; 2008) and Harman (2012). The YSL scheme takes into account roughness
+!  sublayer and canopy drag in the canopy layer. Aerodynamic parameters
+!  (roughness length, zero-plane displacement) are updated every time-step
+!  to incorporate accordingly.
+!
+!  Coded by Junhong Lee (Yonsei Univ.) 2018
+!    *correspondence: Jinkyu Hong
+!
+!  further modifications :
+!    - Optimize the code by Junhong Lee and Jeongwon Kim, 2020
+!    - Add wind speed at 80m by Jeongwon Kim, 2021
+!    - Optimize the code further by Junhong Lee and Jeongwon Kim, 2022
+!
+!  Reference :
+!    - Lee et al., 2020. Implementation of a roughness sublayer parameterization
+!                        in the Weather Research and Forecasting model (WRF vers
+!                        -ion 3.7.1) and its evaluation for regional climate sim
+!                        -ulations. (Geophysical Model Development)
+!                        (https://gmd.copernicus.org/articles/13/521/2020/)
+!
 !
 MODULE module_sf_sfclayrev_rsl
 
