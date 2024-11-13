@@ -239,6 +239,7 @@ target_sources(
                   module_sf_sfcdiags_ruclsm.F
                   module_sf_sfclay.F
                   module_sf_sfclayrev.F
+                  module_sf_ysl.F
                   module_sf_slab.F
                   module_sf_ssib.F
                   module_sf_sstskin.F

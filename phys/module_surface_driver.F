@@ -11,6 +11,13 @@ CONTAINS
      &          ,acsnom,acsnow,snowfallac,akhs,akms,albedo,br,canwat  &
      &          ,chklowq,dt,dx,dx2d,area2d,dz8w,dzs,glw               &
      &          ,grdflx,gsw,swdown,gz1oz0,hfx,ht,ifsnow,isfflx        &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+     &          ,CHS_jun, zol_jun, br_jun                             &
+     &          ,wspd_jun, ust_jun                                    &
+     &          ,hc_jun, lai_jun, lc_jun, m10_wind, m2_temp           &
+     &          ,beta_jun, zpd_jun                                    &
+     &          ,chs_ori                                              &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      &          ,fractional_seaice,seaice_albedo_opt                  &
      &          ,seaice_albedo_default,seaice_thickness_opt,          &
      &          seaice_thickness_default                              &
@@ -330,6 +337,9 @@ CONTAINS
 
    USE module_state_description, ONLY : SFCLAYSCHEME              &
                                        ,SFCLAYREVSCHEME           &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+                                       ,SFCLAYYSLSCHEME           &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
                                        ,MYJSFCSCHEME              &
                                        ,QNSESFCSCHEME             &
                                        ,MYJPBLSCHEME              &
@@ -378,6 +388,9 @@ CONTAINS
    USE module_sf_pxlsm
    USE module_sf_temfsfclay
    USE module_sf_sfclayrev
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+   USE module_sf_ysl
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    USE module_sf_noah_seaice_drv
 #if ( EM_CORE==1)
    USE module_sf_mynn
@@ -702,6 +715,13 @@ CONTAINS
 
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   GRDFLX
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   HFX
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   CHS_jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   zol_jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   br_jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   wspd_jun, ust_jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   hc_jun, lai_jun, lc_jun, m10_wind, m2_temp, beta_jun, zpd_jun, chs_ori
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   RMOL
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   PBLH
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   Q2
@@ -2083,6 +2103,83 @@ CONTAINS
        ELSE
          CALL wrf_error_fatal('Lacking arguments for SFCLAY in surface driver')
        ENDIF
+
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+     CASE (SFCLAYYSLSCHEME)
+! DX varies spatially in NMM, therefore, SFCLAY cannot be called
+! because it takes a scalar DX. NMM passes in a dummy value for this
+! scalar.  NEEDS FURTHER ATTENTION. JM 20050215
+       IF (PRESENT(qv_curr)                            .AND.    &
+           PRESENT(mol)        .AND.  PRESENT(regime)  .AND.    &
+                                                      .TRUE. ) THEN
+         CALL wrf_debug( 100, 'in SFCLAY' )
+
+         IF ( FRACTIONAL_SEAICE == 1 ) THEN
+            CALL SFCLAYREV_SEAICE_WRAPPER(u_phytmp,v_phytmp,t_phy,qv_curr,&
+                 p_phy,dz8w,cp,g,rcp,r_d,xlv,psfc,chs,chs2,cqs2,cpm, &
+                 znt,ust,pblh,mavail,zol,mol,regime,psim,psih,fm,fhh, &
+                 xland,hfx,qfx,lh,tsk,flhc,flqc,qgh,qsfc,rmol,       &
+                 u10,v10,th2,t2,q2,                                  &
+                 gz1oz0,wspd,br,isfflx,dx2d,                         &
+                 svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,              &
+                 P1000mb,lakemask,                                   &
+                 XICE,SST,TSK_SEA,                                                  &
+                 CHS2_SEA,CHS_SEA,CPM_SEA,CQS2_SEA,FLHC_SEA,FLQC_SEA,               &
+                 HFX_SEA,LH_SEA,QFX_SEA,QGH_SEA,QSFC_SEA,ZNT_SEA,                   &
+                 ITIMESTEP,TICE2TSK_IF2COLD,XICE_THRESHOLD,                         &
+                 ids,ide, jds,jde, kds,kde,                          &
+                 ims,ime, jms,jme, kms,kme,                          &
+                 i_start(ij),i_end(ij), j_start(ij),j_end(ij), kts,kte,    &
+                 ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,                &
+                 shalwater_z0,water_depth,                           & 
+                 scm_force_flux,sf_surface_physics,errmsg,errflg     )
+         ELSE
+         CALL SFCLAYREV_rsl(u_phytmp,v_phytmp,t_phy,qv_curr,&
+               p_phy,dz8w,cp,g,rcp,r_d,xlv,psfc,chs,chs2,cqs2,cpm, &
+               znt,ust,pblh,mavail,zol,mol,regime,psim,psih,fm,fhh, &
+               xland,hfx,qfx,lh,tsk,flhc,flqc,qgh,qsfc,rmol,       &
+               u10,v10,th2,t2,q2,                                  &
+               gz1oz0,wspd,br,isfflx,dx,                           &
+               svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,              &
+               eomeg, stbolt,                                      &
+               P1000mb,                                            &
+!               lakemask,                                           & ! Not exist in RSL
+               itimestep,                                          &  ! IN
+               LAI,                                                &  ! IN
+               IVGTYP,                                             &  ! IN: Not in sfc driver yet
+               MMINLU,                                             &  ! IN
+               wspd_jun,                                           &  ! INOUT
+               ust_jun,                                            &  ! INOUT
+               hc_jun,                                             &  ! INOUT
+               lai_jun,                                            &  ! INOUT
+               lc_jun,                                             &  ! INOUT
+               m10_wind, m2_temp,                                  &
+               beta_jun,                                           &  ! INOUT
+               zpd_jun,                                            &  ! INOUT
+               CHS_ori,                                            &  ! INOUT
+               ids,ide, jds,jde, kds,kde,                          &
+               ims,ime, jms,jme, kms,kme,                          &
+               i_start(ij),i_end(ij), j_start(ij),j_end(ij), kts,kte, &
+               ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,                &
+               scm_force_flux )
+!               shalwater_z0,water_depth,                           & !  Not exist in RSL
+!               ,errmsg,errflg                        )               ! Not exist in RSL
+#if ( EM_CORE==1)
+           DO j = j_start(ij),j_end(ij)
+           DO i = i_start(ij),i_end(ij)
+             ch(i,j) = chs (i,j)
+!!             ch(i,j) = flhc(i,j)/( cpm(i,j)*rho(i,kts,j) )
+             CHS_jun(i,j) = chs(I,J)
+             zol_jun(i,j) = zol(I,J)
+             br_jun (i,j) = br (I,J)
+           end do
+           end do
+#endif
+         ENDIF
+       ELSE
+         CALL wrf_error_fatal('Lacking arguments for SFCLAY in surface driver')
+       ENDIF
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
 
      CASE (SFCLAYREVSCHEME)
 ! DX varies spatially in NMM, therefore, SFCLAY cannot be called

@@ -606,6 +606,14 @@ BENCH_START(surf_driver_tim)
      &        ,FLQC=grid%flqc          ,GLW=grid%glw            ,GRDFLX=grid%grdflx      &
      &        ,GSW=grid%gsw    ,SWDOWN=grid%swdown        ,GZ1OZ0=gz1oz0      ,HFX=grid%hfx              &
      &        ,HT=grid%ht              ,IFSNOW=config_flags%ifsnow      ,ISFFLX=config_flags%isfflx      &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+     &        ,CHS_jun=grid%CHS_jun, zol_jun=grid%zol_jun, br_jun=grid%br_jun  &
+     &        ,wspd_jun=grid%wspd_jun, ust_jun=grid%ust_jun                    &
+     &        ,hc_jun=grid%hc_jun, lai_jun=grid%lai_jun, lc_jun=grid%lc_jun    &
+     &        ,m10_wind=grid%m10_wind, m2_temp=grid%m2_temp                    &
+     &        ,beta_jun=grid%beta_jun, zpd_jun=grid%zpd_jun                    &
+     &        ,chs_ori=grid%chs_ori                                            &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      &        ,FRACTIONAL_SEAICE=config_flags%fractional_seaice           &
      &        ,SEAICE_ALBEDO_OPT=config_flags%seaice_albedo_opt           &
      &        ,SEAICE_ALBEDO_DEFAULT=config_flags%seaice_albedo_default   &

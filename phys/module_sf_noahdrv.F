@@ -1228,7 +1228,13 @@ CONTAINS
           EMISS(I,J) = EMISSI
           EMISS_RURAL(I,J) = EMISSI
 ! Noah: activate time-varying roughness length (V3.3 Feb 2011)
-          ZNT(I,J)=Z0K
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+          IF ( XLAND(I,J) .LT. 1.5 .and. (IVGTYP(I,J)>=2 .and. IVGTYP(I,J) <=15)) THEN
+            ZNT(I,J) = ZNT(I,J)
+          ELSE
+            ZNT(I,J)=Z0K
+          ENDIF
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 !
 ! FASDAS
 !
