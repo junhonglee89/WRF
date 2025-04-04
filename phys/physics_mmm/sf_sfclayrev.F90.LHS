@@ -14,13 +14,14 @@
  real(kind=kind_phys),parameter:: czo   = 0.0185
  real(kind=kind_phys),parameter:: ozo   = 1.59e-5
 ! #ifdef Set_LHS
- real(kind=kind_phys),parameter,private:: au_LHS    = 10.
- real(kind=kind_phys),parameter,private:: ah_LHS    = 34.
  real(kind=kind_phys),parameter,private:: CB05_a_LHS = 6.1
  real(kind=kind_phys),parameter,private:: CB05_b_LHS = 2.5
  real(kind=kind_phys),parameter,private:: CB05_c_LHS = 5.3
  real(kind=kind_phys),parameter,private:: CB05_d_LHS = 1.1
  real(kind=kind_phys),parameter,private:: czil_LHS = 0.1
+ real(kind=kind_phys),parameter,private:: zeta_m_LHS = -0.15
+ real(kind=kind_phys),parameter,private:: au_LHS = (1. - (1.-16. * zeta_m_LHS)**(3./4.)) / zeta_m_LHS
+ real(kind=kind_phys),parameter,private:: ah_LHS = (1. - (1.-16. * zeta_m_LHS)**(3./2.)) / zeta_m_LHS
  !#else
  !real(kind=kind_phys),parameter,private:: au_LHS    = 10.
  !real(kind=kind_phys),parameter,private:: ah_LHS    = 34.
