@@ -1222,6 +1222,129 @@ MODULE module_sf_ysl
    ! AHW: mods to compute ck, cd
            PSIQ10=ALOG(KARMAN*UST(I)*10./XKA+10./ZL(I))-pq10(I)
    
+! Debug
+  ! Compute factorm1
+  zzzol(I) = zol(i)
+  zol0(i)  = zol(I)*znt(I)/za(I)          ! z0/L
+  zzzolzz(i) = zzzol(i)+zol0(i)
+
+  IF (zol(i)==0.) THEN
+    MOL(i) = 999999.
+  ELSE
+    MOL(i) = za(i) / zol(i)
+  ENDIF
+
+  cm1(i) = (1. - ( 0.4        / ( 2.*beta_old(i)*PHIM(zpd_dt(i),MOL(i)) ) ))*exp(cm2(i)/2.)
+  ch1(i) = (1. - ( 0.4*PRc(I) / ( 2.*beta_old(i)*PHIH(zpd_dt(i),MOL(i)) ) ))*exp(cm2(i)/2.)
+  cm1(i) = (1. - ( 0.4        / ( 2.*betaN )))*exp(cm2(i)/2.)
+  ch1(i) = (1. - ( 0.4*PRc(I) / ( 2.*betaN )))*exp(cm2(i)/2.)
+
+  startz = za(i)
+!  endz   = za(i)*2.
+  endz   = za(i)*10.
+
+  ! Integration from Hc to 10*Zr
+  PSIM_hat_temp(i) = 0
+  PSIH_hat_temp(i) = 0
+  DO zhat = startz, endz-za(i)/2., za(i)/2.
+    startz1 = zhat 
+    endz1   = zhat + za(i)/2.
+
+    G1  = (endz1-startz1)/2.*(-1./sqrt(3.)) + (endz1+startz1)/2.
+    G2  = (endz1-startz1)/2.*( 1./sqrt(3.)) + (endz1+startz1)/2.
+    PSIM_hat_temp(i) = PSIM_hat_temp(i) + (endz1-startz1)/2. * (     (PHIM(G1,MOL(i)) * (1.-(1.-cm1(i)*exp( cm2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G1*(-1.) ))) / G1)&
+& + (PHIM(G2,MOL(i)) * (1.-(1.-cm1(i)*exp( cm2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G2*(-1.) ))) / G2) )
+    PSIH_hat_temp(i) = PSIH_hat_temp(i) + (endz1-startz1)/2. * (     (PHIH(G1,MOL(i)) * (1.-(1.-ch1(i)*exp( ch2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G1*(-1.) ))) / G1)&
+& + (PHIH(G2,MOL(i)) * (1.-(1.-ch1(i)*exp( ch2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G2*(-1.) ))) / G2) )
+
+!IF ( I == 39 .and. J == 58 ) print*, "chs i1-x2", zhat, PSIH_hat_temp(i), PHIH(G1,MOL(i)), G1, MOL(i)
+  ENDDO
+
+  IF ( BR(i) > 0 ) THEN
+!    psim_temp(i) = psim_stable(zzzolzz(I))-psim_stable(zol0(i))-PSIM_hat_temp(i)
+    psim_temp(i) = psim_stable(zzzol(I))-psim_stable(zol0(i))-PSIM_hat_temp(i)
+    psih_temp(i) = psih_stable(zzzol(i))-psih_stable(zol0(i))-PSIH_hat_temp(i)
+! print*, "chs i1-01", zzzol(i), zol0(i), MOL(i), psih_stable(zzzol(i)), psih_stable(zol0(i)), PSIH_hat_temp(i), PSIM_hat_temp(i) 
+  ELSE IF ( BR(i) < 0 ) THEN
+!    psim_temp(i) = psim_unstable(zzzolzz(I))-psim_unstable(zol0(i))-PSIM_hat_temp(i)
+    psim_temp(i) = psim_unstable(zzzol(I))-psim_unstable(zol0(i))-PSIM_hat_temp(i)
+    psih_temp(i) = psih_unstable(zzzol(i))-psih_unstable(zol0(i))-PSIH_hat_temp(i)
+! print*, "chs i1-02", zzzol(i), zol0(i), MOL(i), psih_unstable(zzzol(i)), psih_unstable(zol0(i)), PSIH_hat_temp(i), PSIM_hat_temp(i)
+  ELSE
+!xx    psim_temp(i) = 0
+!xx    psih_temp(i) = 0
+    psim_temp(i) = -PSIM_hat_temp(i)
+    psih_temp(i) = -PSIH_hat_temp(i)
+  ENDIF
+
+  factorm1 = WSPD(I) / ( alog( ZA(i) / znt(i) ) - psim_temp(i)  )
+
+  PSIH_hat_chs(i) = 0
+  startz1 = zpd_dt(i) 
+  endz1   = za(i)
+  G1  = (endz1-startz1)/2.*(-1./sqrt(3.)) + (endz1+startz1)/2.
+  G2  = (endz1-startz1)/2.*( 1./sqrt(3.)) + (endz1+startz1)/2.
+  PSIH_hat_chs(i) = (endz1-startz1)/2. * ( (PHIH(G1,MOL(i)) * (1.-(1.-ch1(i)*exp( ch2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G1*(-1.) ))) / G1)&
+  & + (PHIH(G2,MOL(i)) * (1.-(1.-ch1(i)*exp( ch2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G2*(-1.) ))) / G2) )
+
+
+  ! Compute Uhc
+  zzzol(I) = zol(i) / za(i) * zpd_dt(i) 
+  zol0(i)  = zol(I)*znt(I)/za(I)          ! z0/L
+  zzzolzz(i) = zzzol(i)+zol0(i)
+
+  startz = zpd_dt(i) 
+!  endz   = za(i)*2.
+  endz   = za(i)*10.
+
+  PSIM_hat_temp(i) = 0
+  PSIH_hat_temp(i) = 0
+
+  ! Integrate from zpd_dt to Zr first.
+  startz1 = startz
+  endz1 = za(i)
+  G1  = (endz1-startz1)/2.*(-1./sqrt(3.)) + (endz1+startz1)/2.
+  G2  = (endz1-startz1)/2.*( 1./sqrt(3.)) + (endz1+startz1)/2.
+  PSIM_hat_temp(i) = PSIM_hat_temp(i) + (endz1-startz1)/2. * ((PHIM(G1,MOL(i)) * (1.-(1.-cm1(i)*exp( cm2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G1*(-1.) ))) / G1)&
+& + (PHIM(G2,MOL(i)) * (1.-(1.-cm1(i)*exp( cm2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G2*(-1.) ))) / G2) )
+  PSIH_hat_temp(i) = PSIH_hat_temp(i) + (endz1-startz1)/2. * ((PHIH(G1,MOL(i)) * (1.-(1.-ch1(i)*exp( ch2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G1*(-1.) ))) / G1)&
+& + (PHIH(G2,MOL(i)) * (1.-(1.-ch1(i)*exp( ch2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G2*(-1.) ))) / G2) )
+
+  ! Integrate from Zr to 10*Zr
+  DO zhat = za(i), endz-za(i)/2., za(i)/2.
+    startz1 = zhat
+    endz1 = zhat+za(i)/2.
+
+    G1  = (endz1-startz1)/2.*(-1./sqrt(3.)) + (endz1+startz1)/2.
+    G2  = (endz1-startz1)/2.*( 1./sqrt(3.)) + (endz1+startz1)/2.
+    PSIM_hat_temp(i) = PSIM_hat_temp(i) + (endz1-startz1)/2. * ((PHIM(G1,MOL(i)) * (1.-(1.-cm1(i)*exp( cm2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G1*(-1.) ))) / G1)&
+& + (PHIM(G2,MOL(i)) * (1.-(1.-cm1(i)*exp( cm2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G2*(-1.) ))) / G2) )
+    PSIH_hat_temp(i) = PSIH_hat_temp(i) + (endz1-startz1)/2. * ((PHIH(G1,MOL(i)) * (1.-(1.-ch1(i)*exp( ch2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G1*(-1.) ))) / G1)&
+& + (PHIH(G2,MOL(i)) * (1.-(1.-ch1(i)*exp( ch2(i)/(2.*beta_old(i)*beta_old(i)*Lc(i))*G2*(-1.) ))) / G2) )
+
+!IF ( I == 39 .and. J == 58 ) print*, "chs i2-x2", zhat, startz1, endz1, G1,G2, PSIH_hat_temp(i), PHIH(G1,MOL(i)), G1, MOL(i)
+ENDDO
+
+
+  IF ( BR(i) > 0 ) THEN
+!    psim_temp(i) = psim_stable(zzzolzz(I))-psim_stable(zol0(i))-PSIM_hat_temp(i)
+    psim_temp(i) = psim_stable(zzzol(I))-psim_stable(zol0(i))-PSIM_hat_temp(i)
+    psih_temp(i) = psih_stable(zzzol(i))-psih_stable(zol0(i))-PSIH_hat_temp(i)
+! print*, "chs i2-01", zzzol(i), zol0(i), MOL(i), psih_stable(zzzol(i)), psih_stable(zol0(i)), PSIH_hat_temp(i), PSIM_hat_temp(i) 
+  ELSE IF ( BR(i) < 0 ) THEN
+!    psim_temp(i) = psim_unstable(zzzolzz(I))-psim_unstable(zol0(i))-PSIM_hat_temp(i)
+    psim_temp(i) = psim_unstable(zzzol(I))-psim_unstable(zol0(i))-PSIM_hat_temp(i)
+    psih_temp(i) = psih_unstable(zzzol(i))-psih_unstable(zol0(i))-PSIH_hat_temp(i)
+! print*, "chs i2-02", zzzol(i), zol0(i), MOL(i), psih_unstable(zzzol(i)), psih_unstable(zol0(i)), PSIH_hat_temp(i), PSIM_hat_temp(i)
+  ELSE
+!xx    psim_temp(i) = 0
+!xx    psih_temp(i) = 0
+    psim_temp(i) = -PSIM_hat_temp(i)
+    psih_temp(i) = -PSIH_hat_temp(i)
+  ENDIF
+
+  Uhc(I) = factorm1 * ( alog( zpd_dt(i) / znt(i) ) - psim_temp(i) ) 
+! Debug
    
    
    ! V3.7: using Fairall 2003 to compute z0q and z0t over water:
@@ -1563,8 +1686,10 @@ MODULE module_sf_ysl
    
    Prc(I) = 0.5 + 0.3 * tanh ( 2. * Lc(I) * zol(I) / za(I) )
    !chs_temp
-     chs_temp(i) = ( alog(za(i)/zpd_dt(i)) + chs_i1(i) - chs_i2(i) - PSIH_hat_chs(i))
-     IF ( alog(za(i)/zpd_dt(i)) *0.9 < - chs_i1(i) + chs_i2(i) + psih_hat_chs(i) ) chs_temp(i) = alog(za(i)/zpd_dt(i)) * 0.1 
+!     chs_temp(i) = ( alog(za(i)/zpd_dt(i)) + chs_i1(i) - chs_i2(i) - PSIH_hat_chs(i))
+!     IF ( alog(za(i)/zpd_dt(i)) *0.9 < - chs_i1(i) + chs_i2(i) + psih_hat_chs(i) ) chs_temp(i) = alog(za(i)/zpd_dt(i)) * 0.1 
+     chs_temp(i) = ( alog(za(i)/zpd_dt(i)) - PSIH_hat_chs(i))
+     IF ( alog(za(i)/zpd_dt(i)) *0.9 < psih_hat_chs(i) ) chs_temp(i) = alog(za(i)/zpd_dt(i)) * 0.1 
      CHS(I) = 1./ ( 1./ (KARMAN * UST(i) / ( chs_temp(i) )) + &
    !chs_temp
    !zl_add
