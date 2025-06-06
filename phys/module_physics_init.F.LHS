@@ -1229,6 +1229,10 @@ CHARACTER(LEN=8) :: name
 #if  ! ( NMM_CORE == 1 )
        Z0(i,j)=ZZLND
 #endif
+#ifdef Set_LHS
+      ZNT(i,j) = ZNT(i,j) * ZNT_LHS
+      Z0(i,j)  = Z0(i,j)  * ZNT_LHS
+#endif
        MAVAIL(i,j)=XMAVA
      ELSE
        IF(mminlu_loc .EQ. '    ') ALBBCK(i,j)=0.08
@@ -1349,14 +1353,6 @@ CHARACTER(LEN=8) :: name
                 ims, ime, jms, jme, kms, kme,                       &
                 its, ite, jts, jte, kts, kte                       )
    ENDIF
-
-#ifdef Set_LHS
-   DO j=jts,jtf
-      DO i=its,itf
-        ZNT(i,j) = ZNT(i,j) * ZNT_LHS
-      END DO
-   END DO
-#endif
 
   ENDIF !}
 
