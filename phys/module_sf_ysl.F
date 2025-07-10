@@ -49,6 +49,7 @@ MODULE module_sf_ysl
                         itimestep, &
                         LAI, VEGTYP, MMINLU,                          &
                         wspd_jun, ust_jun,                            &
+                        RSL_mask,                                     &
                         hc_jun, lai_jun, lc_jun,                      &
                         m10_wind, m2_temp,                            &
                         beta_jun, zpd_jun,                            &
@@ -235,6 +236,7 @@ MODULE module_sf_ysl
          INTEGER ::  I,J
    
          REAL,DIMENSION(ims:ime, jms:jme),INTENT(INOUT) :: wspd_jun, ust_jun
+         REAL,DIMENSION(ims:ime, jms:jme),INTENT(IN   ) :: RSL_mask
          REAL,DIMENSION(ims:ime, jms:jme),INTENT(INOUT) :: hc_jun, lai_jun, lc_jun, beta_jun, zpd_jun, CHS_ori
          REAL,DIMENSION(ims:ime, jms:jme),INTENT(INOUT) :: m10_wind, m2_temp
          REAL,DIMENSION(ims:ime, jms:jme),INTENT(IN) :: LAI
@@ -247,7 +249,7 @@ MODULE module_sf_ysl
          REAL,DIMENSION(its:ite) :: PSFC1D, CHS1D, CHS21D, CQS21D, CPM1D, PBLH1D, RMOL1D, ZNT1D, &
     & UST1D, MAVAIL1D, ZOL1D, MOL1D, REGIME1D, PSIM1D, PSIH1D, FM1D, FH1D, XLAND1D, HFX1D, QFX1D, &
     & TSK1D, U101D, V101D, TH21D ,T21D, Q21D ,FLHC1D, FLQC1D, QGH1D, QSFC1D, LH1D, GZ1OZ01D, WSPD1D, &
-    & BR1D, LAI1D, hc_jun1d , USTM1D, CK1D,CKA1D, CD1D, CDA1D 
+    & BR1D, LAI1D, hc_jun1d , USTM1D, CK1D,CKA1D, CD1D, CDA1D, RSL_mask1d
         INTEGER, DIMENSION(its:ite) :: VEGTYP1D
    
    
@@ -293,6 +295,7 @@ MODULE module_sf_ysl
               LAI1D(i) = LAI(i,j)
               VEGTYP1D(i) = VEGTYP(i,j)
               hc_jun1d(i) = hc_jun(i,j)
+              RSL_mask1d(i) = RSL_mask(i,j)
               USTM1D(i) = USTM(i,j)
            ENDDO
    
@@ -314,6 +317,7 @@ MODULE module_sf_ysl
                    P1000mb,                                           &
                    LAI1D, VEGTYP1D, MMINLU,                           &
                    wspd_jun1d, ust_jun1d,      &
+                   RSL_mask1d,                                        &
                    hc_jun1D, lai_jun1d, lc_jun1d,                     &
                    m10_wind1d, m2_temp1d,                             &
                    beta_jun1d, zpd_jun1d,                             &
@@ -394,6 +398,7 @@ MODULE module_sf_ysl
                         P1000mb,                                      &
                         LAI, VEGTYP, MMINLU,                          &
                         wspd_jun, ust_jun,                            &
+                        RSL_mask,                                     &
                         hc_jun, lai_jun, lc_jun,                      &
                         m10_wind, m2_temp,                            &
                         beta_jun, zpd_jun,                            &
@@ -538,6 +543,7 @@ MODULE module_sf_ysl
          REAL,DIMENSION( its:ite ), INTENT(OUT)   :: lai_jun, lc_jun, beta_jun, zpd_jun 
          REAL,DIMENSION( its:ite ), INTENT(OUT)   :: m10_wind, m2_temp
          REAL,DIMENSION( its:ite ), INTENT(IN) :: hc_jun
+         REAL,DIMENSION( its:ite ), INTENT(IN) :: RSL_mask
          integer,intent(in) :: itimestep
          REAL,dimension( its:ite ) :: PSIM_hat, PSIH_hat
          REAL,dimension( its:ite ) :: zl, zol0, zzzol, zolzz, zzzolzz
@@ -783,7 +789,8 @@ MODULE module_sf_ysl
      IF ( VAI(I) <= 0 ) then
        VAI(i) = 0.1
      ENDIF
-     Lc(i) = 4.0 * Hc_jun(i) / VAI(i)
+     !Lc(i) = 4.0 * Hc_jun(i) / VAI(i)
+     Lc(i) = 5.0 * Hc_jun(i) / VAI(i)
    
      IF ( Lc(i) >= 500. ) Lc(i) = 500.
      lai_jun(i) = VAI(i)
@@ -813,7 +820,8 @@ MODULE module_sf_ysl
    
    
      VAI(i) = LAI(i)
-       IF ( (XLAND(I)-1.5) .GT. 0. .or.(VEGTYP(I)==1.or.VEGTYP(I)>=16) ) then
+!       IF ( (XLAND(I)-1.5) .GT. 0. .or.(VEGTYP(I)==1.or.VEGTYP(I)>=16) ) then
+       IF ( (XLAND(I)-1.5) .GT. 0. .or. RSL_mask(I) == 0 ) then
          if (br(I).gt.0) then
            if (br(I).gt.250.0) then
            zol(I)=zolri(250.0,ZA(I),ZNT(I))
@@ -871,7 +879,8 @@ MODULE module_sf_ysl
    DO I = its,ite !LOOP2
    zpd_dt(i) = Hc(i) * 0.35
    
-   IF (ITER_CONFIG .EQ. 1 .and.  XLAND(I) .LT. 1.5 .and.(VEGTYP(I)>=2.and.VEGTYP(I)<=15)) THEN !LANDUSE_only_for_RSL
+!   IF (ITER_CONFIG .EQ. 1 .and.  XLAND(I) .LT. 1.5 .and.(VEGTYP(I)>=2.and.VEGTYP(I)<=15)) THEN !LANDUSE_only_for_RSL
+   IF (ITER_CONFIG .EQ. 1 .and.  XLAND(I) .LT. 1.5 .and. RSL_mask(I) == 1) THEN !LANDUSE_only_for_RSL
    
    ITER = 1
    
@@ -894,7 +903,8 @@ MODULE module_sf_ysl
    ENDIF !LANDUSE_only_for_RSL
    
    
-   IF (ITER_CONFIG .EQ. 1 .and.  XLAND(I) .LT. 1.5 .and.(VEGTYP(I)>=2.and.VEGTYP(I)<=15)) THEN !LANDUSE_only_for_RSL
+!   IF (ITER_CONFIG .EQ. 1 .and.  XLAND(I) .LT. 1.5 .and.(VEGTYP(I)>=2.and.VEGTYP(I)<=15)) THEN !LANDUSE_only_for_RSL
+   IF (ITER_CONFIG .EQ. 1 .and.  XLAND(I) .LT. 1.5 .and. RSL_mask(I) == 1 ) THEN !LANDUSE_only_for_RSL
    
    DO WHILE  ( (abs (beta1(i) - beta(i)) > 0.0001 .and. ITER < 5 ).or. ITER == 1 )
    
@@ -1045,7 +1055,8 @@ MODULE module_sf_ysl
    
    
    
-           IF((XLAND(I)-1.5).LT.0  .and.(VEGTYP(I)>=2.and.VEGTYP(I)<=15))THEN
+!           IF((XLAND(I)-1.5).LT.0  .and.(VEGTYP(I)>=2.and.VEGTYP(I)<=15))THEN
+           IF((XLAND(I)-1.5).LT.0  .and. RSL_mask(I) == 1 )THEN
    
              call RPSI_hat (zl(i), zol0(i), ZOL(I), ZA(i), ZA(I), Lc(I), zpd_dt(i), cm2(i), ch2(i),&  !IN
                           &D1(i), beta_old(i), PSIM_hat(i), PSIH_hat(i) )          !OUT
@@ -1682,7 +1693,8 @@ ENDDO
             CHS_ori(i) = CHS(i)
    
    
-   IF( (XLAND(I)-1.5).LT.0  .and. (VEGTYP(I)>=2.and.VEGTYP(I)<=15) )THEN
+!   IF( (XLAND(I)-1.5).LT.0  .and. (VEGTYP(I)>=2.and.VEGTYP(I)<=15) )THEN
+   IF( (XLAND(I)-1.5).LT.0  .and. RSL_mask(I) == 1 )THEN
    
    Prc(I) = 0.5 + 0.3 * tanh ( 2. * Lc(I) * zol(I) / za(I) )
    !chs_temp

@@ -95,7 +95,7 @@ CONTAINS
                          allowed_to_read, moved, start_of_simulation,&
                          LAGDAY,                                 &
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
-                         Hc_jun,                                 &
+                         Hc_jun, RSL_mask,                       &
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
                          u10,v10,u10e,v10e,                      &
                          ids, ide, jds, jde, kds, kde,           &
@@ -491,6 +491,7 @@ CONTAINS
              PBLH,THC,MAVAIL,HFX,QFX,RAINBL
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
    REAL,     DIMENSION( ims:ime , jms:jme ) , INTENT(INOUT) ::  Hc_jun
+   REAL,     DIMENSION( ims:ime , jms:jme ) , INTENT(OUT)   ::  RSL_mask
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    INTEGER , INTENT(INOUT)  :: landuse_ISICE, landuse_LUCATS
    INTEGER , INTENT(INOUT)  :: landuse_LUSEAS, landuse_ISN
@@ -902,6 +903,17 @@ CONTAINS
    LOGICAL :: IPRINT
    REAL :: max_utype_urb2d
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+!   real, dimension(1:50  ) ::  SNUPTBL, RSTBL, RGLTBL, HSTBL,                &
+!   SHDTBL, MAXALB,                               &
+!   EMISSMINTBL, EMISSMAXTBL,                     &
+!   LAIMINTBL, LAIMAXTBL,                         &
+!   Z0MINTBL, Z0MAXTBL,                           &
+!   ALBEDOMINTBL, ALBEDOMAXTBL,                   &
+!   ZTOPVTBL,ZBOTVTBL
+!   INTEGER, dimension(1:50):: NROTBL
+!   INTEGER :: LUMATCH, IINDEX, LUCATS1, LCC
+!   CHARACTER(LEN=256) :: LUTYPE1
+
    real, dimension(1:50  ) ::  SNUPTBL, RSTBL, RGLTBL, HSTBL,                &
    SHDTBL, MAXALB,                               &
    EMISSMINTBL, EMISSMAXTBL,                     &
@@ -910,8 +922,15 @@ CONTAINS
    ALBEDOMINTBL, ALBEDOMAXTBL,                   &
    ZTOPVTBL,ZBOTVTBL
    INTEGER, dimension(1:50):: NROTBL
-   INTEGER :: LUMATCH, IINDEX, LUCATS1, LCC
-   CHARACTER(LEN=256) :: LUTYPE1
+   INTEGER :: LUMATCH, IINDEX, LUCATS, LCC
+   CHARACTER(LEN=256) :: LUTYPE, a_string
+   integer :: ierr, loop_count, LC
+   integer , parameter :: loop_max   = 10
+
+   INTEGER , PARAMETER :: OPEN_OK = 0
+   CHARACTER*256 :: mess
+
+
 ! INTEGER :: i_jun, j_jun
 ! INTEGER,PARAMETER :: xts=20000, xte=43200, yts=9600, yte=21600
 ! REAL,allocatable,dimension(:,:) :: jun_hc
@@ -1245,43 +1264,137 @@ CHARACTER(LEN=8) :: name
    ENDIF
 !
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
-   OPEN(19, FILE='VEGPARM.TBL',FORM='FORMATTED',STATUS='OLD')
-   LUMATCH=0
-   FIND_LUTYPE1 : DO WHILE (LUMATCH == 0)
-      READ (19,*,END=993)
-      READ (19,*,END=993)LUTYPE1
-      READ (19,*)LUCATS1,IINDEX
- !     print*, MMINLU_loc, LUTYPE1, LUCATS1,IINDEX
-      IF(LUTYPE1.EQ.MMINLU_loc)THEN
- !       print*, 'LANDUSE TYPE = ' // TRIM ( LUTYPE1 ) // ' FOUND', LUCATS1,' CATEGORIES'
-        LUMATCH=1
-      ELSE
-        DO LCC = 1, LUCATS1+14
-           read(19,*)
-        ENDDO
-      ENDIF
-   ENDDO FIND_LUTYPE1
-   IF(LUTYPE1.EQ.MMINLU_loc)THEN
-     DO LCC=1,LUCATS1
-       READ (19,*)IINDEX,SHDTBL(LCC),                        &
-                 NROTBL(LCC),RSTBL(LCC),RGLTBL(LCC),HSTBL(LCC), &
-                 SNUPTBL(LCC),MAXALB(LCC), LAIMINTBL(LCC),     &
-                 LAIMAXTBL(LCC),EMISSMINTBL(LCC),             &
-                 EMISSMAXTBL(LCC), ALBEDOMINTBL(LCC),         &
-                 ALBEDOMAXTBL(LCC), Z0MINTBL(LCC), Z0MAXTBL(LCC),&
-                 ZTOPVTBL(LCC), ZBOTVTBL(LCC)
-     ENDDO
-   ENDIF
-   CLOSE(19)
- !
-  993   CONTINUE
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+        OPEN(19, FILE='VEGPARM.TBL',FORM='FORMATTED',STATUS='OLD',IOSTAT=ierr)
+        IF(ierr .NE. OPEN_OK ) THEN
+          WRITE(message,FMT='(A)') &
+          'module_sf_noahlsm.F: soil_veg_gen_parm: failure opening VEGPARM.TBL'
+          CALL wrf_error_fatal ( message )
+        END IF
+
+        LUMATCH=0
+
+        loop_count = 0
+        READ (19,FMT='(A)',END=993) a_string
+        FIND_LUTYPE : DO WHILE (LUMATCH == 0)
+           READ (19,*,END=993)LUTYPE
+           READ (19,*)LUCATS,IINDEX
+
+           IF(LUTYPE.EQ.MMINLU_loc)THEN
+              WRITE( mess , * ) 'LANDUSE TYPE = ' // TRIM ( LUTYPE ) // ' FOUND', LUCATS,' CATEGORIES for RSL scheme'
+              CALL wrf_message( mess )
+              LUMATCH=1
+           ELSE
+              loop_count = loop_count+1
+              call wrf_message ( "Skipping over LUTYPE = " // TRIM ( LUTYPE ) )
+              FIND_VEGETATION_PARAMETER_FLAG : DO
+                 READ (19,FMT='(A)', END=993) a_string
+                 IF ( a_string(1:21) .EQ. 'Vegetation Parameters' ) THEN
+                    EXIT FIND_VEGETATION_PARAMETER_FLAG
+                 ELSE IF ( loop_count .GE. loop_max ) THEN
+                    CALL wrf_error_fatal ( 'Too many loops in VEGPARM.TBL')
+                 ENDIF
+              ENDDO FIND_VEGETATION_PARAMETER_FLAG
+           ENDIF
+        ENDDO FIND_LUTYPE
+
+        IF ( SIZE(SHDTBL)       < LUCATS .OR. &
+             SIZE(NROTBL)       < LUCATS .OR. &
+             SIZE(RSTBL)        < LUCATS .OR. &
+             SIZE(RGLTBL)       < LUCATS .OR. &
+             SIZE(HSTBL)        < LUCATS .OR. &
+             SIZE(SNUPTBL)      < LUCATS .OR. &
+             SIZE(MAXALB)       < LUCATS .OR. &
+             SIZE(LAIMINTBL)    < LUCATS .OR. &
+             SIZE(LAIMAXTBL)    < LUCATS .OR. &
+             SIZE(Z0MINTBL)     < LUCATS .OR. &
+             SIZE(Z0MAXTBL)     < LUCATS .OR. &
+             SIZE(ALBEDOMINTBL) < LUCATS .OR. &
+             SIZE(ALBEDOMAXTBL) < LUCATS .OR. &
+             SIZE(ZTOPVTBL) < LUCATS .OR. &
+             SIZE(ZBOTVTBL) < LUCATS .OR. &
+             SIZE(EMISSMINTBL ) < LUCATS .OR. &
+             SIZE(EMISSMAXTBL ) < LUCATS ) THEN
+           CALL wrf_error_fatal('Table sizes too small for value of LUCATS in module_sf_noahdrv.F')
+        ENDIF
+
+        IF(LUTYPE.EQ.MMINLU_loc)THEN
+          DO LC=1,LUCATS
+              READ (19,*)IINDEX,SHDTBL(LC),                        &
+                        NROTBL(LC),RSTBL(LC),RGLTBL(LC),HSTBL(LC), &
+                        SNUPTBL(LC),MAXALB(LC), LAIMINTBL(LC),     &
+                        LAIMAXTBL(LC),EMISSMINTBL(LC),             &
+                        EMISSMAXTBL(LC), ALBEDOMINTBL(LC),         &
+                        ALBEDOMAXTBL(LC), Z0MINTBL(LC), Z0MAXTBL(LC),&
+            ZTOPVTBL(LC), ZBOTVTBL(LC)
+          ENDDO
+        ENDIF
+
+        CLOSE (19)
+        IF (LUMATCH == 0) then
+           CALL wrf_error_fatal ("Land Use Dataset '"//MMINLU_loc//"' not found in VEGPARM.TBL.")
+        ENDIF
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+!   OPEN(19, FILE='VEGPARM.TBL',FORM='FORMATTED',STATUS='OLD')
+!   LUMATCH=0
+!   FIND_LUTYPE1 : DO WHILE (LUMATCH == 0)
+!      READ (19,*,END=993)
+!      READ (19,*,END=993)LUTYPE1
+!      READ (19,*)LUCATS1,IINDEX
+! !     print*, MMINLU_loc, LUTYPE1, LUCATS1,IINDEX
+!      IF(LUTYPE1.EQ.MMINLU_loc)THEN
+! !       print*, 'LANDUSE TYPE = ' // TRIM ( LUTYPE1 ) // ' FOUND', LUCATS1,' CATEGORIES'
+!        LUMATCH=1
+!      ELSE
+!        DO LCC = 1, LUCATS1+14
+!           read(19,*)
+!        ENDDO
+!      ENDIF
+!   ENDDO FIND_LUTYPE1
+!   IF(LUTYPE1.EQ.MMINLU_loc)THEN
+!     DO LCC=1,LUCATS1
+!       READ (19,*)IINDEX,SHDTBL(LCC),                        &
+!                 NROTBL(LCC),RSTBL(LCC),RGLTBL(LCC),HSTBL(LCC), &
+!                 SNUPTBL(LCC),MAXALB(LCC), LAIMINTBL(LCC),     &
+!                 LAIMAXTBL(LCC),EMISSMINTBL(LCC),             &
+!                 EMISSMAXTBL(LCC), ALBEDOMINTBL(LCC),         &
+!                 ALBEDOMAXTBL(LCC), Z0MINTBL(LCC), Z0MAXTBL(LCC),&
+!                 ZTOPVTBL(LCC), ZBOTVTBL(LCC)
+!     ENDDO
+!   ENDIF
+!   CLOSE(19)
+! !
+ 993   CONTINUE
  DO j = jts, jtf
  DO i = its, itf
    HC_jun(i,j) = ZTOPVTBL( IVGTYP(i,j) )
    IF ( XLAND(i,j) .GT. 1.5 ) HC_jun(i,j) = 0
  ENDDO
  ENDDO
- !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+! print*, "junhong", LUTYPE, MMINLU_loc
+ DO j = jts, jtf
+ DO i = its, itf
+   IF ( TRIM(LUTYPE) == 'MODIFIED_IGBP_MODIS_NOAH' ) THEN
+     IF ( (IVGTYP(i,j)==13) .OR. &
+          (IVGTYP(i,j)==15) .OR. &
+          (IVGTYP(i,j)==17) ) THEN
+       RSL_mask(i,j) = 0
+     ELSE
+       RSL_mask(i,j) = 1
+     END IF 
+   ELSE IF ( TRIM(LUTYPE) == 'USGS' ) THEN
+     IF ( (IVGTYP(i,j)== 1) .OR. &
+          (IVGTYP(i,j)==16) .OR. &
+          (IVGTYP(i,j)>=24) ) THEN
+       RSL_mask(i,j) = 0
+     ELSE
+       RSL_mask(i,j) = 1
+     END IF 
+   END IF
+ ENDDO
+ ENDDO
+! !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 !
    DO j=jts,jtf
    DO i=its,itf

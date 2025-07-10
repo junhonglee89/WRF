@@ -14,6 +14,7 @@ CONTAINS
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
      &          ,CHS_jun, zol_jun, br_jun                             &
      &          ,wspd_jun, ust_jun                                    &
+     &          ,RSL_mask                                             &
      &          ,hc_jun, lai_jun, lc_jun, m10_wind, m2_temp           &
      &          ,beta_jun, zpd_jun                                    &
      &          ,chs_ori                                              &
@@ -720,6 +721,7 @@ CONTAINS
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   zol_jun
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   br_jun
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   wspd_jun, ust_jun
+   REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(IN   )::   RSL_mask
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   hc_jun, lai_jun, lc_jun, m10_wind, m2_temp, beta_jun, zpd_jun, chs_ori
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    REAL, DIMENSION( ims:ime, jms:jme ) , INTENT(INOUT)::   RMOL
@@ -2150,6 +2152,7 @@ CONTAINS
                MMINLU,                                             &  ! IN
                wspd_jun,                                           &  ! INOUT
                ust_jun,                                            &  ! INOUT
+               RSL_mask,                                           &  ! INOUT
                hc_jun,                                             &  ! INOUT
                lai_jun,                                            &  ! INOUT
                lc_jun,                                             &  ! INOUT

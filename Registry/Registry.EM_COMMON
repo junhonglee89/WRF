@@ -1968,6 +1968,7 @@ state    real  psix_jun         ij      misc        1         -      rh       "p
 state    real  psiq_jun         ij      misc        1         -      rh       "psiq_jun"                   "psiq_jun"                                  "-"
 state    real  wspd_jun         ij      misc        1         -      rh       "wspd_jun"                   "wspd_jun"                                  "-"
 state    real  ust_jun          ij      misc        1         -      rh       "ust_jun"                    "ust_jun"                                   "-"
+state    real  RSL_mask         ij      misc        1         -      rh       "RSL_mask"                   "RSL_mask"                                  "-"
 state    real  hc_jun           ij      misc        1         -      rh       "hc_jun"                     "hc_jun"                                    "-"
 state    real  lc_jun           ij      misc        1         -      rh       "lc_jun"                     "lc_jun"                                    "-"
 state    real  m10_wind         ij      misc        1         -      rh       "m10_wind"                   "m10_wind"                                  "-"
