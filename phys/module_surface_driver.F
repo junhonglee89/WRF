@@ -256,6 +256,9 @@ CONTAINS
      &          ,tml,t0ml,hml,h0ml,huml,hvml,f,tmoml                  &
      &          ,oml_relaxation_time                                  &
      &          ,ustm,ck,cka,cd,cda,isftcflx,iz0tlnd                  &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+     &          ,penet_const                                          &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      &         ,isurban, mminlu                                       &
      &          ,snotime                                              &
      &           ,rdlai2d                                             &
@@ -1070,6 +1073,9 @@ CONTAINS
    REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(IN):: slope,slp_azi
    REAL, DIMENSION( ims:ime, jms:jme ), OPTIONAL, INTENT(IN):: diffuse_frac
 
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+   REAL   , INTENT(IN )::  penet_const
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
    INTEGER, OPTIONAL, INTENT(IN )::   ISFTCFLX,IZ0TLND
    INTEGER, OPTIONAL, INTENT(IN )::   SF_OCEAN_PHYSICS
    REAL   , OPTIONAL, INTENT(IN )::   OML_HML0
@@ -2163,7 +2169,7 @@ CONTAINS
                ids,ide, jds,jde, kds,kde,                          &
                ims,ime, jms,jme, kms,kme,                          &
                i_start(ij),i_end(ij), j_start(ij),j_end(ij), kts,kte, &
-               ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,                &
+               ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,penet_const,       &
                scm_force_flux )
 !               shalwater_z0,water_depth,                           & !  Not exist in RSL
 !               ,errmsg,errflg                        )               ! Not exist in RSL

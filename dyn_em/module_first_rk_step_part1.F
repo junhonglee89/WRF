@@ -684,6 +684,9 @@ BENCH_START(surf_driver_tim)
      &        ,USTM=grid%ustm          ,CK=grid%ck         ,CKA=grid%cka            &
      &                                 ,CD=grid%cd         ,CDA=grid%cda            &
      &        ,ISFTCFLX=config_flags%isftcflx, IZ0TLND=config_flags%iz0tlnd         &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
+     &        ,penet_const=config_flags%penet_const                                 &
+!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      &        ,SF_OCEAN_PHYSICS=config_flags%sf_ocean_physics                       &
      &        ,OML_HML0=config_flags%oml_hml0 ,OML_GAMMA=config_flags%oml_gamma     &
      &        ,TML=grid%tml, T0ML=grid%t0ml, HML=grid%hml, H0ML=grid%h0ml           &

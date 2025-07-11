@@ -57,7 +57,7 @@ MODULE module_sf_ysl
                         ids,ide, jds,jde, kds,kde,                    &
                         ims,ime, jms,jme, kms,kme,                    &
                         its,ite, jts,jte, kts,kte,                    &
-                        ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,scm_force_flux           )
+                        ustm,ck,cka,cd,cda,isftcflx,iz0tlnd,penet_const,scm_force_flux           )
    !-------------------------------------------------------------------
          IMPLICIT NONE
    !-------------------------------------------------------------------
@@ -221,6 +221,7 @@ MODULE module_sf_ysl
          REAL, OPTIONAL, DIMENSION( ims:ime, jms:jme )              , &
                    INTENT(INOUT)   ::                           USTM
    
+         REAL,  INTENT(IN )   ::  penet_const
          INTEGER,  OPTIONAL,  INTENT(IN )   ::     ISFTCFLX, IZ0TLND
          INTEGER,  OPTIONAL,  INTENT(IN )   ::     SCM_FORCE_FLUX
    ! LOCAL VARS
@@ -327,7 +328,7 @@ MODULE module_sf_ysl
                    ims,ime, jms,jme, kms,kme,                         &
                    its,ite, jts,jte, kts,kte                          &
 #if ( EM_CORE == 1 )
-                   ,isftcflx,iz0tlnd,scm_force_flux,                               &
+                   ,isftcflx,iz0tlnd,penet_const,scm_force_flux,      &
                    USTM1D,CK1D,CKA1D,                  &
                    CD1D,CDA1D                               &
 #endif
@@ -407,7 +408,7 @@ MODULE module_sf_ysl
                         ids,ide, jds,jde, kds,kde,                    &
                         ims,ime, jms,jme, kms,kme,                    &
                         its,ite, jts,jte, kts,kte,                    &
-                        isftcflx, iz0tlnd,scm_force_flux,                            &
+                        isftcflx, iz0tlnd, penet_const, scm_force_flux, &
                         ustm,ck,cka,cd,cda                            )
    !-------------------------------------------------------------------
          IMPLICIT NONE
@@ -484,6 +485,7 @@ MODULE module_sf_ysl
          REAL, OPTIONAL, DIMENSION( its:ite )                       , &
                    INTENT(INOUT)   ::                           USTM
    
+         REAL,  INTENT(IN )   :: penet_const
          INTEGER,  OPTIONAL,  INTENT(IN )   ::     ISFTCFLX, IZ0TLND
          INTEGER,  OPTIONAL,  INTENT(IN )   ::     SCM_FORCE_FLUX
    
@@ -790,9 +792,10 @@ MODULE module_sf_ysl
        VAI(i) = 0.1
      ENDIF
      !Lc(i) = 4.0 * Hc_jun(i) / VAI(i)
-     Lc(i) = 5.0 * Hc_jun(i) / VAI(i)
+     Lc(i) = penet_const * Hc_jun(i) / VAI(i)
    
      IF ( Lc(i) >= 500. ) Lc(i) = 500.
+!     print*, "Junhong RSL const", i, penet_const, LC(i)
      lai_jun(i) = VAI(i)
      lc_jun(i) = Lc(i)
      Hc(i) = Hc_jun(i)
