@@ -125,6 +125,7 @@ MODULES = \
 	module_ra_farms.o  \
 	module_sf_sfclay.o \
 	module_sf_sfclayrev.o \
+	module_sf_ysl.o \
 	module_sf_gfs.o \
 	module_sf_exchcoef.o \
 	module_sf_gfdl.o \
