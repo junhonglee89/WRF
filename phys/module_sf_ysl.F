@@ -673,9 +673,10 @@ MODULE module_sf_ysl
    !                                                                                
          DO 60 I=its,ite
            E1=SVP1*EXP(SVP2*(TGDSA(I)-SVPT0)/(TGDSA(I)-SVP3))                       
-   !  for land points QSFC can come from previous time step
-   !        if(xland(i).gt.1.5.or.qsfc(i).le.0.0)  QSFC(I)=EP2*E1/(PSFC(I)-E1)
-           QSFC(I)=EP2*E1/(PSFC(I)-E1)
+           !the saturation vapor pressure for salty water is on average 2% lower
+!           if(xland(i).gt.1.5 .and. lakemask(i).eq.0.) e1=e1*salinity_factor
+           !for land points qsfc can come from previous time step
+           if(xland(i).gt.1.5.or.qsfc(i).le.0.0)qsfc(i)=ep2*e1/(psfc(i)-e1)                                                 
    
    ! QGH CHANGED TO USE LOWEST-LEVEL AIR TEMP CONSISTENT WITH MYJSFC CHANGE
    ! Q2SAT = QGH IN LSM
@@ -1079,10 +1080,14 @@ MODULE module_sf_ysl
    ! ... paj: psim and psih. Follows Cheng and Brutsaert 2005 (CB05).
    !
    
+       IF ( (XLAND(I)-1.5) .GT. 0. .or. RSL_mask(I) == 0 ) then
+           psim(I)=psim_stable(zolzz(I))-psim_stable(zol0(i))
+           psih(I)=psih_stable(zolzz(i))-psih_stable(zol0(i))
+       ELSE
            psim(I)=psim_stable(zol(I))-psim_stable(zol0(i))-PSIM_hat(i)
-   
    !        psih(I)=psih_stable(zolzz(i))-psih_stable(zol0(i))
            psih(I)=psih_stable(zol(i))-psih_stable(zol0(i))
+       END IF
    !
            psim10(I)=psim_stable(zol10)-psim_stable(zol0(i))
            psih10(I)=psih_stable(zol10)-psih_stable(zol0(i))
@@ -1151,10 +1156,13 @@ MODULE module_sf_ysl
    
    !        psim(I)=psim_unstable(zolzz(i))-psim_unstable(zol0(i))
    !        psim(I)=psim_unstable(zolzz(I))-psim_unstable(zol0(i))-PSIM_hat(i)
-           psim(I)=psim_unstable(zol(I))-psim_unstable(zol0(i))-PSIM_hat(i)
-   
+       IF ( (XLAND(I)-1.5) .GT. 0. .or. RSL_mask(I) == 0 ) then
+           psim(I)=psim_unstable(zolzz(I))-psim_unstable(zol0(i))
            psih(I)=psih_unstable(zolzz(i))-psih_unstable(zol0(i))
+       ELSE
+           psim(I)=psim_unstable(zol(I))-psim_unstable(zol0(i))-PSIM_hat(i)
            psih(I)=psih_unstable(zol(i))-psih_unstable(zol0(i))
+       END IF
    !
            psim10(I)=psim_unstable(zol10)-psim_unstable(zol0(i))
            psih10(I)=psih_unstable(zol10)-psih_unstable(zol0(i))
@@ -1169,8 +1177,14 @@ MODULE module_sf_ysl
    !        pq(I)=psih_unstable(zol(I))-psih_unstable(zol0(i))-PSIH_hat(i)
            pq(I)=psih_unstable(zol(I))-psih_unstable(zlL)-PSIH_hat(i)
    
+
+       IF ( (XLAND(I)-1.5) .GT. 0. .or. RSL_mask(I) == 0 ) then
+           pq2(i)=psih_stable(zl2)-psih_stable(zll)
+           pq10(i)=psih_stable(zl10)-psih_stable(zll)
+       ELSE
            pq2(I)=psih_unstable(zl2)-psih_unstable(zol0(i))
            pq10(I)=psih_unstable(zl10)-psih_unstable(zol0(i))
+       END IF
    !
    !---LIMIOT PSIH AND PSIM IN THE CASE OF THIN LAYERS AND HIGH ROUGHNESS            
    !---  THIS PREVENTS DENOMINATOR IN FLUXES FROM GETTING TOO SMALL                 
@@ -1206,8 +1220,11 @@ MODULE module_sf_ysl
            DTG=THX(I)-THGB(I)                                                   
    
    !        PSIX=GZ1OZ0(I)-PSIM(I)                                                   
-           GZZ0(I) = ALOG((ZA(I))/ZNT(I))
+       IF ( (XLAND(I)-1.5) .GT. 0. .or. RSL_mask(I) == 0 ) then
+           PSIX=gz1oz0(I)-PSIM(I)
+       ELSE
            PSIX=GZZ0(I)-PSIM(I)
+       END IF
    !        PSIX=GZ1OZ0(I)-PSIM(I)
    !        psix_jun(i) = PSIX
    
@@ -1370,13 +1387,62 @@ ENDDO
                  Z0T = MIN(Z0T,1.0e-4)
                  Z0T = MAX(Z0T,2.0e-9)
                  Z0Q = Z0T
+
+! following paj:
+       zolzz(i)=zol(i)*(za(i)+z0t)/za(i) ! (z+z0t)/L
+       zol10=zol(i)*(10.+z0t)/za(i)   ! (10+z0t)/L
+       zol2=zol(i)*(2.+z0t)/za(i)     ! (2+z0t)/L
+       zol0(i)=zol(i)*z0t/za(i)          ! z0t/L
+
+       if(zol(i).gt.0.) then
+          psih(i)=psih_stable(zolzz(i))-psih_stable(zol0(i))
+          psih10(i)=psih_stable(zol10)-psih_stable(zol0(i))
+          psih2(i)=psih_stable(zol2)-psih_stable(zol0(i))
+       else
+          if(zol(i).eq.0) then
+             psih(i)=0.
+             psih10(i)=0.
+             psih2(i)=0.
+          else
+             psih(i)=psih_unstable(zolzz(i))-psih_unstable(zol0(i))
+             psih10(i)=psih_unstable(zol10)-psih_unstable(zol0(i))
+             psih2(i)=psih_unstable(zol2)-psih_unstable(zol0(i))
+          endif
+       endif
+       psit=alog((za(i)+z0t)/z0t)-psih(i)
+       psit2=alog((2.+z0t)/z0t)-psih2(i)
+
+       zolzz(i)=zol(i)*(za(i)+z0q)/za(i)    ! (z+z0q)/L
+       zol10=zol(i)*(10.+z0q)/za(i)   ! (10+z0q)/L
+       zol2=zol(i)*(2.+z0q)/za(i)     ! (2+z0q)/L
+       zol0(i)=zol(i)*z0q/za(i)          ! z0q/L
+!
+       if(zol(i).gt.0.) then
+          psih(i)=psih_stable(zolzz(i))-psih_stable(zol0(i))
+          psih10(i)=psih_stable(zol10)-psih_stable(zol0(i))
+          psih2(i)=psih_stable(zol2)-psih_stable(zol0(i))
+       else
+          if(zol(i).eq.0) then
+             psih(i)=0.
+             psih10(i)=0.
+             psih2(i)=0.
+          else
+             psih(i)=psih_unstable(zolzz(i))-psih_unstable(zol0(i))
+             psih10(i)=psih_unstable(zol10)-psih_unstable(zol0(i))
+             psih2(i)=psih_unstable(zol2)-psih_unstable(zol0(i))
+             endif
+          endif
+!
+          psiq=alog((za(i)+z0q)/z0q)-psih(i)
+          psiq2=alog((2.+z0q)/z0q)-psih2(i)
+          psiq10=alog((10.+z0q)/z0q)-psih10(i)
+       endif
    
-                 PSIQ=max(ALOG((ZA(I)+Z0Q)/Z0Q)-PSIH(I), 2.)
-                 PSIT=max(ALOG((ZA(I)+Z0T)/Z0T)-PSIH(I), 2.)
-                 PSIQ2=max(ALOG((2.+Z0Q)/Z0Q)-PSIH2(I), 2.)
-                 PSIT2=max(ALOG((2.+Z0T)/Z0T)-PSIH2(I), 2.)
-                 PSIQ10=max(ALOG((10.+Z0Q)/Z0Q)-PSIH10(I), 2.)
-           ENDIF
+!                 PSIQ=max(ALOG((ZA(I)+Z0Q)/Z0Q)-PSIH(I), 2.)
+!                 PSIT=max(ALOG((ZA(I)+Z0T)/Z0T)-PSIH(I), 2.)
+!                 PSIQ2=max(ALOG((2.+Z0Q)/Z0Q)-PSIH2(I), 2.)
+!                 PSIT2=max(ALOG((2.+Z0T)/Z0T)-PSIH2(I), 2.)
+!                 PSIQ10=max(ALOG((10.+Z0Q)/Z0Q)-PSIH10(I), 2.)
    
            IF ( PRESENT(ISFTCFLX) ) THEN
               IF ( ISFTCFLX.EQ.1 .AND. (XLAND(I)-1.5).GE.0. ) THEN
@@ -1503,7 +1569,13 @@ ENDDO
                  RESTAR=UST(I)*ZL(I)/VISC
    !             Modify CZIL according to Chen & Zhang, 2009
    
-                 CZIL = 10.0 ** ( -0.40 * ( ZL(I) / 0.07 ) )
+!                 CZIL = 10.0 ** ( -0.40 * ( ZL(I) / 0.07 ) )
+          if(iz0tlnd.eq.1) then
+             czil = 10.0 ** ( -0.40 * ( zl(i) / 0.07 ) )
+          elseif(iz0tlnd.eq.2) then
+             czil = 0.1 
+          endif
+
    !
    ! ... paj: compute phish for z0t over land
    !
@@ -1545,7 +1617,12 @@ ENDDO
    ! TO PREVENT OSCILLATIONS AVERAGE WITH OLD VALUE 
    
    !        UST(I)=0.5*UST(I)+0.5*KARMAN*WSPD(I)/PSIX                                             
+       IF ( (XLAND(I)-1.5) .GT. 0. .or. RSL_mask(I) == 0 ) then
+           UST(I)=0.5*UST(I)+0.5*KARMAN*WSPD(I)/PSIX 
+       ELSE
            UST(I)=KARMAN*WSPD(I)/PSIX                                             
+       END IF
+       
            UST_JUN(I)=UST(I)
    
    ! TKE coupling: compute ust without vconv for use in tke scheme
