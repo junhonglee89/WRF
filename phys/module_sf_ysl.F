@@ -45,7 +45,7 @@ MODULE module_sf_ysl
                         GZ1OZ0,WSPD,BR,ISFFLX,DX,                     &
                         SVP1,SVP2,SVP3,SVPT0,EP1,EP2,                 &
                         KARMAN,EOMEG,STBOLT,                          &
-                        P1000mb,                                      &
+                        P1000mb,lakemask,                             &
                         itimestep, &
                         LAI, VEGTYP, MMINLU,                          &
                         wspd_jun, ust_jun,                            &
@@ -237,7 +237,7 @@ MODULE module_sf_ysl
          INTEGER ::  I,J
    
          REAL,DIMENSION(ims:ime, jms:jme),INTENT(INOUT) :: wspd_jun, ust_jun
-         REAL,DIMENSION(ims:ime, jms:jme),INTENT(IN   ) :: RSL_mask
+         REAL,DIMENSION(ims:ime, jms:jme),INTENT(IN   ) :: RSL_mask, lakemask
          REAL,DIMENSION(ims:ime, jms:jme),INTENT(INOUT) :: hc_jun, lai_jun, lc_jun, beta_jun, zpd_jun, CHS_ori
          REAL,DIMENSION(ims:ime, jms:jme),INTENT(INOUT) :: m10_wind, m2_temp
          REAL,DIMENSION(ims:ime, jms:jme),INTENT(IN) :: LAI
@@ -250,7 +250,7 @@ MODULE module_sf_ysl
          REAL,DIMENSION(its:ite) :: PSFC1D, CHS1D, CHS21D, CQS21D, CPM1D, PBLH1D, RMOL1D, ZNT1D, &
     & UST1D, MAVAIL1D, ZOL1D, MOL1D, REGIME1D, PSIM1D, PSIH1D, FM1D, FH1D, XLAND1D, HFX1D, QFX1D, &
     & TSK1D, U101D, V101D, TH21D ,T21D, Q21D ,FLHC1D, FLQC1D, QGH1D, QSFC1D, LH1D, GZ1OZ01D, WSPD1D, &
-    & BR1D, LAI1D, hc_jun1d , USTM1D, CK1D,CKA1D, CD1D, CDA1D, RSL_mask1d
+    & BR1D, LAI1D, hc_jun1d , USTM1D, CK1D,CKA1D, CD1D, CDA1D, RSL_mask1d, lakemask1d
         INTEGER, DIMENSION(its:ite) :: VEGTYP1D
    
    
@@ -297,6 +297,7 @@ MODULE module_sf_ysl
               VEGTYP1D(i) = VEGTYP(i,j)
               hc_jun1d(i) = hc_jun(i,j)
               RSL_mask1d(i) = RSL_mask(i,j)
+              lakemask1d(i) = lakemask(i,j)
               USTM1D(i) = USTM(i,j)
            ENDDO
    
@@ -318,7 +319,7 @@ MODULE module_sf_ysl
                    P1000mb,                                           &
                    LAI1D, VEGTYP1D, MMINLU,                           &
                    wspd_jun1d, ust_jun1d,      &
-                   RSL_mask1d,                                        &
+                   RSL_mask1d,lakemask1d,                             &
                    hc_jun1D, lai_jun1d, lc_jun1d,                     &
                    m10_wind1d, m2_temp1d,                             &
                    beta_jun1d, zpd_jun1d,                             &
@@ -399,7 +400,7 @@ MODULE module_sf_ysl
                         P1000mb,                                      &
                         LAI, VEGTYP, MMINLU,                          &
                         wspd_jun, ust_jun,                            &
-                        RSL_mask,                                     &
+                        RSL_mask, lakemask,                           &
                         hc_jun, lai_jun, lc_jun,                      &
                         m10_wind, m2_temp,                            &
                         beta_jun, zpd_jun,                            &
@@ -545,7 +546,7 @@ MODULE module_sf_ysl
          REAL,DIMENSION( its:ite ), INTENT(OUT)   :: lai_jun, lc_jun, beta_jun, zpd_jun 
          REAL,DIMENSION( its:ite ), INTENT(OUT)   :: m10_wind, m2_temp
          REAL,DIMENSION( its:ite ), INTENT(IN) :: hc_jun
-         REAL,DIMENSION( its:ite ), INTENT(IN) :: RSL_mask
+         REAL,DIMENSION( its:ite ), INTENT(IN) :: RSL_mask, lakemask
          integer,intent(in) :: itimestep
          REAL,dimension( its:ite ) :: PSIM_hat, PSIH_hat
          REAL,dimension( its:ite ) :: zl, zol0, zzzol, zolzz, zzzolzz
@@ -594,6 +595,7 @@ MODULE module_sf_ysl
     REAL,dimension( its:ite )  :: beta1, beta2
    
     REAL, PARAMETER :: betaN = 0.374
+    REAL, PARAMETER :: salinity_factor = 0.98
    
    
    ! MPI191107
@@ -674,7 +676,7 @@ MODULE module_sf_ysl
          DO 60 I=its,ite
            E1=SVP1*EXP(SVP2*(TGDSA(I)-SVPT0)/(TGDSA(I)-SVP3))                       
            !the saturation vapor pressure for salty water is on average 2% lower
-!           if(xland(i).gt.1.5 .and. lakemask(i).eq.0.) e1=e1*salinity_factor
+           if(xland(i).gt.1.5 .and. lakemask(i).eq.0.) e1=e1*salinity_factor
            !for land points qsfc can come from previous time step
            if(xland(i).gt.1.5.or.qsfc(i).le.0.0)qsfc(i)=ep2*e1/(psfc(i)-e1)                                                 
    
@@ -1175,7 +1177,11 @@ MODULE module_sf_ysl
    
    !        pq(I)=psih_unstable(zol(I))-psih_unstable(zol0(i))
    !        pq(I)=psih_unstable(zol(I))-psih_unstable(zol0(i))-PSIH_hat(i)
+       IF ( (XLAND(I)-1.5) .GT. 0. .or. RSL_mask(I) == 0 ) then
            pq(I)=psih_unstable(zol(I))-psih_unstable(zlL)-PSIH_hat(i)
+       ELSE
+           pq(I)=psih_unstable(zol(I))-psih_unstable(zlL)-PSIH_hat(i)
+       END IF
    
 
        IF ( (XLAND(I)-1.5) .GT. 0. .or. RSL_mask(I) == 0 ) then
@@ -1736,7 +1742,8 @@ ENDDO
    
          DO 370 I=its,ite
            QFX(I)=FLQC(I)*(QSFC(I)-QX(I))                                     
-           QFX(I)=AMAX1(QFX(I),0.)                                            
+!           QFX(I)=FLHC(I)*(QSFC(I)-QX(I)) ! kill 
+!           QFX(I)=AMAX1(QFX(I),0.)                                            
            LH(I)=XLV*QFX(I)
      370 CONTINUE                                                                 
                                                                                    
@@ -1754,7 +1761,7 @@ ENDDO
    !         ENDIF 
            ELSEIF(XLAND(I)-1.5.LT.0.)THEN                                       
              HFX(I)=FLHC(I)*(THGB(I)-THX(I))                                
-             HFX(I)=AMAX1(HFX(I),-250.)                                       
+!             HFX(I)=AMAX1(HFX(I),-250.)                                       
            ENDIF                                                                  
      400 CONTINUE                                                                 
    

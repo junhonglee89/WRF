@@ -2151,7 +2151,7 @@ CONTAINS
                svp1,svp2,svp3,svpt0,ep_1,ep_2,karman,              &
                eomeg, stbolt,                                      &
                P1000mb,                                            &
-!               lakemask,                                           & ! Not exist in RSL
+               lakemask,                                           & !
                itimestep,                                          &  ! IN
                LAI,                                                &  ! IN
                IVGTYP,                                             &  ! IN: Not in sfc driver yet
