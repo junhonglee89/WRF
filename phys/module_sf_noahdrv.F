@@ -57,6 +57,7 @@ CONTAINS
                   RDLAI2D,USEMONALB,                            &
                   RIB,                                          & !?
                   NOAHRES,opt_thcnd,                            &
+                  RSL_mask,                                     & !Junhong
 ! Noah UA changes
                   ua_phys,flx4_2d,fvb_2d,fbur_2d,fgsn_2d,       &
                   ids,ide, jds,jde, kds,kde,                    &
@@ -297,6 +298,7 @@ CONTAINS
                                                         RAINBL, &
                                                         EMBCK,  &
                                                            SR,  &
+                                                       RSL_mask,& ! Junhong
                                                        SWDDIR,  &
                                                        SWDDIF
 
@@ -1229,7 +1231,7 @@ CONTAINS
           EMISS_RURAL(I,J) = EMISSI
 ! Noah: activate time-varying roughness length (V3.3 Feb 2011)
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_junhong
-          IF ( XLAND(I,J) .LT. 1.5 .and. (IVGTYP(I,J)>=2 .and. IVGTYP(I,J) <=15)) THEN
+          IF ( XLAND(I,J) .LT. 1.5 .and. RSL_mask(I,J) == 1) THEN
             ZNT(I,J) = ZNT(I,J)
           ELSE
             ZNT(I,J)=Z0K

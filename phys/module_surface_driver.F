@@ -2945,6 +2945,7 @@ CONTAINS
                 rdlai2d,usemonalb,                              &
                 br,                                             & !?
                 NOAHRES,opt_thcnd,                              &
+                RSL_mask,                                       & !Junhong
                 ua_phys,flx4,fvb,fbur,fgsn,                     &
                 ids,ide, jds,jde, kds,kde,                      &
                 ims,ime, jms,jme, kms,kme,                      &
