@@ -174,8 +174,7 @@ MODULE module_sf_ysl
                                                                  V10, &
                                                                  TH2, &
                                                                   T2, &
-                                                                  Q2, &
-                                                                QSFC
+                                                                  Q2
    
    !
          REAL,     DIMENSION( ims:ime, jms:jme )                    , &
@@ -252,6 +251,7 @@ MODULE module_sf_ysl
     & TSK1D, U101D, V101D, TH21D ,T21D, Q21D ,FLHC1D, FLQC1D, QGH1D, QSFC1D, LH1D, GZ1OZ01D, WSPD1D, &
     & BR1D, LAI1D, hc_jun1d , USTM1D, CK1D,CKA1D, CD1D, CDA1D, RSL_mask1d, lakemask1d
         INTEGER, DIMENSION(its:ite) :: VEGTYP1D
+        REAL,DIMENSION(its:ite, jts:jte),INTENT(INOUT) :: QSFC
    
    
          DO J=jts,jte
@@ -299,6 +299,7 @@ MODULE module_sf_ysl
               RSL_mask1d(i) = RSL_mask(i,j)
               lakemask1d(i) = lakemask(i,j)
               USTM1D(i) = USTM(i,j)
+              QSFC1D(i) = QSFC(i,j)
            ENDDO
    
            !  Sending array starting locations of optional variables may cause
@@ -467,7 +468,9 @@ MODULE module_sf_ysl
    
          REAL,     DIMENSION( its:ite )                             , &
                    INTENT(OUT)     ::                        U10,V10, &
-                                                   TH2,T2,Q2,QSFC,LH
+                                                   TH2,T2,Q2,LH
+         REAL,     DIMENSION( its:ite )                             , &
+                   INTENT(INOUT)   ::                        QSFC
    
                                        
          REAL,     INTENT(IN   )               ::   CP,G,ROVCP,R,XLV,DX
