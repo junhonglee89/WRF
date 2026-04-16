@@ -251,7 +251,7 @@ MODULE module_sf_ysl
     & TSK1D, U101D, V101D, TH21D ,T21D, Q21D ,FLHC1D, FLQC1D, QGH1D, QSFC1D, LH1D, GZ1OZ01D, WSPD1D, &
     & BR1D, LAI1D, hc_jun1d , USTM1D, CK1D,CKA1D, CD1D, CDA1D, RSL_mask1d, lakemask1d
         INTEGER, DIMENSION(its:ite) :: VEGTYP1D
-        REAL,DIMENSION(its:ite, jts:jte),INTENT(INOUT) :: QSFC
+        REAL,DIMENSION(ims:ime, jms:jme),INTENT(INOUT) :: QSFC
    
    
          DO J=jts,jte
