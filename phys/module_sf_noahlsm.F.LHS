@@ -66,7 +66,7 @@ use module_wrf_error
 !
 
 #ifdef Set_LHS
-   REAL, PARAMETER, PRIVATE :: ZNT_LHS = 2.0
+   REAL, PARAMETER, PRIVATE :: ZNT_LHS = 1.0
 #endif
 
 CONTAINS
