@@ -66,7 +66,13 @@ use module_wrf_error
 !
 
 #ifdef Set_LHS
-   REAL, PARAMETER, PRIVATE :: ZNT_LHS = 1.0
+   REAL, PARAMETER, PRIVATE :: ZNT_LHS    = 1.0
+   REAL, PARAMETER, PRIVATE :: BEXP_LHS   = 1.0
+   REAL, PARAMETER, PRIVATE :: DKSAT_LHS  = 1.0
+   REAL, PARAMETER, PRIVATE :: SMCMAX_LHS = 1.0
+   REAL, PARAMETER, PRIVATE :: RSMIN_LHS  = 1.0
+   REAL, PARAMETER, PRIVATE :: LAIMIN_LHS = 1.0
+   REAL, PARAMETER, PRIVATE :: LAIMAX_LHS = 1.0
 #endif
 
 CONTAINS
@@ -2460,6 +2466,11 @@ CONTAINS
       SMCMAX = MAXSMC (SOILTYP)
       SMCREF = REFSMC (SOILTYP)
       SMCWLT = WLTSMC (SOILTYP)
+#ifdef Set_LHS
+      BEXP   = BEXP   * BEXP_LHS
+      DKSAT  = DKSAT  * DKSAT_LHS
+      SMCMAX = SMCMAX * SMCMAX_LHS
+#endif
 ! ----------------------------------------------------------------------
 ! Set-up universal parameters (not dependent on SOILTYP, VEGTYP or
 ! SLOPETYP)
@@ -2504,6 +2515,9 @@ CONTAINS
 #ifdef Set_LHS
       Z0MIN     = Z0MIN  * ZNT_LHS
       Z0MAX     = Z0MAX  * ZNT_LHS
+      RSMIN     = RSMIN  * RSMIN_LHS
+      LAIMIN    = LAIMIN * LAIMIN_LHS
+      LAIMAX    = LAIMAX * LAIMAX_LHS
 #endif
       ALBEDOMIN = ALBEDOMINTBL (VEGTYP)
       ALBEDOMAX = ALBEDOMAXTBL (VEGTYP)
